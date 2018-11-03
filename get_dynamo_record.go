@@ -23,7 +23,7 @@ type getDynamoRecord struct {
 	callback GetDynamoRecordCallback
 	baseScene
 }
-type GetDynamoRecordCallback func(table dynamo.Table) (bool, error)
+type GetDynamoRecordCallback func(table dynamo.Table) bool
 
 func GetDynamoRecord(target string, callback GetDynamoRecordCallback) *getDynamoRecord {
 	scene := getDynamoRecord{
@@ -51,11 +51,7 @@ func (x *getDynamoRecord) play() error {
 	for n := 0; n < maxRetry; n++ {
 		time.Sleep(time.Second * 2)
 
-		fetched, err := x.callback(table)
-		if err != nil {
-			return err
-		}
-		if fetched {
+		if x.callback(table) {
 			return nil
 		}
 	}
