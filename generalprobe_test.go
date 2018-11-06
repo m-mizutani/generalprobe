@@ -71,11 +71,6 @@ func TestSnsToDynamo(t *testing.T) {
 	params := loadTestParameters()
 	id := uuid.New().String()
 
-	type respMsg struct {
-		ID string `dynamo:"result_id"`
-		Report []byte `dynamo:"report"`
-	}
-
 	done := false
 	g := gp.New(params.Region, params.StackName)
 	g.AddScenes([]gp.Scene{
@@ -84,12 +79,12 @@ func TestSnsToDynamo(t *testing.T) {
 
 		// Recv result
 		gp.GetDynamoRecord("ResultStore", func(table dynamo.Table) bool {
-			var resp []respMsg
+			var resp []map[string]interface{}
 			err := table.Get("result_id", id).All(&resp)
 			log.WithField("dynamo resp", resp).Debug("get dynamo response")
 			require.NoError(t, err)
 			assert.Equal(t, 1, len(resp))
-			assert.Equal(t, id, resp[0].ID)
+			assert.Equal(t, id, resp[0]["result_id"].(string))
 			done = true
 			return true
 		}),
@@ -98,4 +93,5 @@ func TestSnsToDynamo(t *testing.T) {
 	g.Act()
 	require.Equal(t, true, done)
 }
+
 
