@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  Trigger:
+    Type: AWS::SNS::Topic
+
+  TestHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.6
+      Handler: main.handler
+      Role:
+        Fn::GetAtt: LambdaRole.Arn
+      CodeUri: .
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: ResultStore
+          BUCKET_NAME:
+            Fn::GetAtt: ResultBucket.Arn
+      Events:
+        Notification:
+          Type: SNS
+          Properties:
+            Topic:
+              Ref: Trigger
+
+  ResultStore:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: result_id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: result_id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  ResultBucket:
+    Type: AWS::S3::Bucket
+
+  # --------------------------------------------------------
+  # IAM Roles
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: ["lambda.amazonaws.com"]
+            Action: ["sts:AssumeRole"]
+      Path: "/"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: "DynamoDBWritable"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - Fn::GetAtt: ResultStore.Arn
+                  - Fn::Sub: [ "${TableArn}/index/*", { TableArn: { "Fn::GetAtt": ResultStore.Arn } } ]
+              - Effect: "Allow"
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - Fn::GetAtt: ResultBucket.Arn
+                  - Fn::Sub: [ "${BucketArn}/index/*", { BucketArn: { "Fn::GetAtt": ResultBucket.Arn } } ]
