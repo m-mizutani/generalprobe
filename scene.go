@@ -15,19 +15,19 @@ func (x *baseScene) lookupPhysicalID(logicalID string) string {
 	return x.gp.lookup(logicalID)
 }
 
-type intermission struct {
-	callback IntermissionCallback
+type adLib struct {
+	callback AdLibCallback
 	baseScene
 }
-type IntermissionCallback func()
+type AdLibCallback func()
 
-func Intermission(callback IntermissionCallback) *intermission {
-	scene := intermission{
+func AdLib(callback AdLibCallback) *adLib {
+	scene := adLib{
 		callback: callback,
 	}
 	return &scene
 }
-func (x *intermission) play() error {
+func (x *adLib) play() error {
 	x.callback()
 	return nil
 }
