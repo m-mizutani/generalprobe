@@ -19,6 +19,7 @@ type Generalprobe struct {
 	done      bool
 }
 
+// New is constructor of Generalprobe structure.
 func New(awsRegion, stackName string) Generalprobe {
 	gp := Generalprobe{
 		awsRegion: awsRegion,
@@ -43,7 +44,8 @@ func New(awsRegion, stackName string) Generalprobe {
 	return gp
 }
 
-func (x *Generalprobe) lookup(logicalId string) string {
+// LookupID looks up PhysicalID from resource list of the CFn stack.
+func (x *Generalprobe) LookupID(logicalId string) string {
 	for _, resource := range x.resources {
 		if resource.LogicalResourceId != nil && *resource.LogicalResourceId == logicalId {
 			return *resource.PhysicalResourceId
@@ -53,6 +55,7 @@ func (x *Generalprobe) lookup(logicalId string) string {
 	return ""
 }
 
+// AddScens appends Scene set to Generalprobe instance.
 func (x *Generalprobe) AddScenes(newScenes []Scene) {
 	for _, scene := range newScenes {
 		scene.setGeneralprobe(x)
@@ -60,6 +63,7 @@ func (x *Generalprobe) AddScenes(newScenes []Scene) {
 	}
 }
 
+// Act invokes test according to appended Scenes.
 func (x *Generalprobe) Act() error {
 	for _, scene := range x.scenes {
 		if err := scene.play(); err != nil {
