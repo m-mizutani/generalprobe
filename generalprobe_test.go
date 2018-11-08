@@ -6,16 +6,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/guregu/dynamo"
 	gp "github.com/m-mizutani/generalprobe"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/google/uuid"
-	"github.com/guregu/dynamo"
 )
 
 func init() {
-	log.SetLevel(log.InfoLevel)
+	log.SetLevel(log.DebugLevel)
 }
 
 type testParameters struct {
@@ -88,10 +88,13 @@ func TestSnsToDynamo(t *testing.T) {
 			done = true
 			return true
 		}),
+
+		gp.AdLib(func() {
+			logs := g.SearchLambdaLogs("TestHandler", id)
+			assert.NotEqual(t, 0, len(logs))
+		}),
 	})
 
 	g.Act()
 	require.Equal(t, true, done)
 }
-
-
