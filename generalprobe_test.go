@@ -15,7 +15,21 @@ import (
 )
 
 func init() {
-	log.SetLevel(log.DebugLevel)
+	logLevel := log.WarnLevel
+	switch os.Getenv("GP_LOG_LEVEL") {
+	case "TRACE":
+		logLevel = log.TraceLevel
+	case "DEBUG":
+		logLevel = log.DebugLevel
+	case "INFO":
+		logLevel = log.InfoLevel
+	case "WARN":
+		logLevel = log.WarnLevel
+	case "ERROR":
+		logLevel = log.ErrorLevel
+
+	}
+	log.SetLevel(logLevel)
 }
 
 type testParameters struct {

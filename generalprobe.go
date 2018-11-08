@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 
-	"github.com/k0kubun/pp"
+	// "github.com/k0kubun/pp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -67,7 +67,7 @@ func (x *Generalprobe) LookupID(logicalId string) string {
 
 func toMilliSec(t time.Time) *int64 {
 	var u int64
-	u = (t.Unix() * 1000) 
+	u = (t.Unix() * 1000)
 	return &u
 }
 
@@ -88,8 +88,8 @@ func (x *Generalprobe) SearchLambdaLogs(logicalID string, filter string) []strin
 	for n := 0; n < maxRetry; n++ {
 		input := cloudwatchlogs.FilterLogEventsInput{
 			LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", lambdaName)),
-			StartTime: toMilliSec(x.StartTime.Add(time.Minute * -1)),
-			EndTime: toMilliSec(now.Add(time.Minute * 1)),
+			StartTime:    toMilliSec(x.StartTime.Add(time.Minute * -1)),
+			EndTime:      toMilliSec(now.Add(time.Minute * 1)),
 		}
 		if filter != "" {
 			input.FilterPattern = aws.String(fmt.Sprintf("\"%s\"", filter))
