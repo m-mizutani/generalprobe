@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	log "github.com/sirupsen/logrus"
@@ -16,8 +16,10 @@ type getKinesisStreamRecord struct {
 	baseScene
 	callback GetKinesisStreamRecordCallback
 }
+
 // GetKinesisStreamRecordCallback is callback function called after retrieving kinesis record
 type GetKinesisStreamRecordCallback func(data []byte) bool
+
 // GetKinesisStreamRecord is a constructor of Scene
 func GetKinesisStreamRecord(logicalID string, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
 	scene := getKinesisStreamRecord{
