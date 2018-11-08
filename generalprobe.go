@@ -17,6 +17,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
+// Generalprobe is a main structure of the framework
 type Generalprobe struct {
 	awsRegion  string
 	awsSession *session.Session
@@ -55,9 +56,9 @@ func New(awsRegion, stackName string) Generalprobe {
 }
 
 // LookupID looks up PhysicalID from resource list of the CFn stack.
-func (x *Generalprobe) LookupID(logicalId string) string {
+func (x *Generalprobe) LookupID(logicalID string) string {
 	for _, resource := range x.resources {
-		if resource.LogicalResourceId != nil && *resource.LogicalResourceId == logicalId {
+		if resource.LogicalResourceId != nil && *resource.LogicalResourceId == logicalID {
 			return *resource.PhysicalResourceId
 		}
 	}
@@ -71,6 +72,7 @@ func toMilliSec(t time.Time) *int64 {
 	return &u
 }
 
+// SearchLambdaLogs sends query to ClodWatchLogs and retrieve logs output by Lambda
 func (x *Generalprobe) SearchLambdaLogs(logicalID string, filter string) []string {
 	const maxRetry = 20
 	const interval = 3
@@ -124,7 +126,7 @@ func (x *Generalprobe) SearchLambdaLogs(logicalID string, filter string) []strin
 	return result
 }
 
-// AddScens appends Scene set to Generalprobe instance.
+// AddScenes appends Scene set to Generalprobe instance.
 func (x *Generalprobe) AddScenes(newScenes []Scene) {
 	for _, scene := range newScenes {
 		scene.setGeneralprobe(x)

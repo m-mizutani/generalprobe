@@ -19,8 +19,9 @@ type invokeLambda struct {
 	callback  InvokeLambdaCallback
 	baseScene
 }
+// InvokeLambdaCallback is callback function called after Lambda exits
 type InvokeLambdaCallback func(response []byte)
-
+// InvokeLambda is a constructor of Scene
 func InvokeLambda(logicalID string, callback InvokeLambdaCallback) *invokeLambda {
 	scene := invokeLambda{
 		logicalID: logicalID,

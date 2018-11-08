@@ -23,8 +23,9 @@ type getDynamoRecord struct {
 	callback GetDynamoRecordCallback
 	baseScene
 }
+// GetDynamoRecordCallback is callback function called after retrieving target record
 type GetDynamoRecordCallback func(table dynamo.Table) bool
-
+// GetDynamoRecord is a constructor of Scene
 func GetDynamoRecord(target string, callback GetDynamoRecordCallback) *getDynamoRecord {
 	scene := getDynamoRecord{
 		target:     target,
