@@ -35,10 +35,6 @@ func init() {
 type testParameters struct {
 	StackName    string `json:"StackName"`
 	Region       string `json:"Region"`
-	SnsName      string `json:"SnsName"`
-	LambdaName   string `json:"LambdaName"`
-	DynamoDBName string `json:"DynamoDBName"`
-	S3BucketName string `json:"S3BucketName"`
 }
 
 func loadTestParameters() testParameters {

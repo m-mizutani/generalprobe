@@ -2,9 +2,9 @@ module github.com/m-mizutani/generalprobe
 
 require (
 	github.com/aws/aws-lambda-go v1.6.0
-	github.com/aws/aws-sdk-go v1.15.68
+	github.com/aws/aws-sdk-go v1.15.88
 	github.com/cenkalti/backoff v2.0.0+incompatible // indirect
-	github.com/google/uuid v1.0.0
+	github.com/google/uuid v1.1.0
 	github.com/guregu/dynamo v1.0.0
 	github.com/guregu/toki v0.0.0-20150128062511-84b1fe56f646 // indirect
 	github.com/k0kubun/pp v2.3.0+incompatible
