@@ -7,25 +7,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+
 	// "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
 type invokeLambda struct {
-	logicalID string
-	input     []byte
-	event     interface{}
-	callback  InvokeLambdaCallback
+	target   Target
+	input    []byte
+	event    interface{}
+	callback InvokeLambdaCallback
 	baseScene
 }
+
 // InvokeLambdaCallback is callback function called after Lambda exits
 type InvokeLambdaCallback func(response []byte)
+
 // InvokeLambda is a constructor of Scene
-func InvokeLambda(logicalID string, callback InvokeLambdaCallback) *invokeLambda {
+func InvokeLambda(target Target, callback InvokeLambdaCallback) *invokeLambda {
 	scene := invokeLambda{
-		logicalID: logicalID,
-		callback:  callback,
+		target:   target,
+		callback: callback,
 	}
 	return &scene
 }
@@ -75,7 +78,7 @@ func (x *invokeLambda) play() error {
 	}))
 	lambdaService := lambda.New(ssn)
 
-	lambdaArn := x.lookupPhysicalID(x.logicalID)
+	lambdaArn := x.target.arn()
 	resp, err := lambdaService.Invoke(&lambda.InvokeInput{
 		FunctionName: aws.String(lambdaArn),
 		Payload:      eventData,

@@ -9,15 +9,15 @@ import (
 )
 
 type publishSnsMessage struct {
-	topicName string
-	message   []byte
+	target  Target
+	message []byte
 	baseScene
 }
 
-func PublishSnsMessage(topicName string, message []byte) *publishSnsMessage {
+func PublishSnsMessage(target Target, message []byte) *publishSnsMessage {
 	scene := publishSnsMessage{
-		topicName: topicName,
-		message:   message,
+		target:  target,
+		message: message,
 	}
 	return &scene
 }
@@ -28,7 +28,7 @@ func (x *publishSnsMessage) play() error {
 	}))
 	snsService := sns.New(ssn)
 
-	topicArn := x.lookupPhysicalID(x.topicName)
+	topicArn := x.target.arn()
 	resp, err := snsService.Publish(&sns.PublishInput{
 		Message:  aws.String(string(x.message)),
 		TopicArn: aws.String(topicArn),

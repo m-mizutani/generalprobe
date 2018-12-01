@@ -12,7 +12,7 @@ import (
 )
 
 type getKinesisStreamRecord struct {
-	logicalID string
+	target Target
 	baseScene
 	callback GetKinesisStreamRecordCallback
 }
@@ -21,10 +21,10 @@ type getKinesisStreamRecord struct {
 type GetKinesisStreamRecordCallback func(data []byte) bool
 
 // GetKinesisStreamRecord is a constructor of Scene
-func GetKinesisStreamRecord(logicalID string, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
+func GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
 	scene := getKinesisStreamRecord{
-		logicalID: logicalID,
-		callback:  callback,
+		target:   target,
+		callback: callback,
 	}
 	return &scene
 }
@@ -32,7 +32,7 @@ func GetKinesisStreamRecord(logicalID string, callback GetKinesisStreamRecordCal
 func (x *getKinesisStreamRecord) play() error {
 	const maxRetry = 20
 
-	streamName := x.lookupPhysicalID(x.logicalID)
+	streamName := x.target.name()
 
 	ssn := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(x.region()),

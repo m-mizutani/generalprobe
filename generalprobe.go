@@ -2,6 +2,7 @@ package generalprobe
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 
-	// "github.com/k0kubun/pp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,11 +21,14 @@ func init() {
 type Generalprobe struct {
 	awsRegion  string
 	awsSession *session.Session
+	awsAccount string
 	stackName  string
-	StartTime  time.Time
+	stackArn   string
 	scenes     []Scene
 	resources  []*cloudformation.StackResource
 	done       bool
+
+	StartTime time.Time
 }
 
 // New is constructor of Generalprobe structure.
@@ -52,6 +55,22 @@ func New(awsRegion, stackName string) Generalprobe {
 
 	gp.resources = resp.StackResources
 
+	stackResp, err := client.DescribeStacks(&cloudformation.DescribeStacksInput{
+		StackName: aws.String(stackName),
+	})
+
+	if err != nil {
+		log.Fatal("Fail to get detail of CloudFormation Stack instance", err, stackName)
+	}
+
+	for _, stack := range stackResp.Stacks {
+		if *stack.StackName == stackName {
+			gp.stackArn = *stack.StackId
+			sec := strings.Split(gp.stackArn, ":")
+			gp.awsAccount = sec[4]
+		}
+	}
+
 	return gp
 }
 
@@ -66,6 +85,17 @@ func (x *Generalprobe) LookupID(logicalID string) string {
 	return ""
 }
 
+// LookupType looks up ResourceType
+func (x *Generalprobe) LookupType(logicalID string) string {
+	for _, resource := range x.resources {
+		if resource.LogicalResourceId != nil && *resource.LogicalResourceId == logicalID {
+			return *resource.ResourceType
+		}
+	}
+
+	return ""
+}
+
 func toMilliSec(t time.Time) *int64 {
 	var u int64
 	u = (t.Unix() * 1000)
@@ -73,14 +103,14 @@ func toMilliSec(t time.Time) *int64 {
 }
 
 // SearchLambdaLogs sends query to ClodWatchLogs and retrieve logs output by Lambda
-func (x *Generalprobe) SearchLambdaLogs(logicalID string, filter string) []string {
+func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
 	const maxRetry = 20
 	const interval = 3
 
 	var result []string
-	lambdaName := x.LookupID(logicalID)
+	lambdaName := target.name()
 	if lambdaName == "" {
-		log.Error(fmt.Printf("No such lambda function: %s", logicalID))
+		log.Error(fmt.Printf("No such lambda function: %s", target))
 	}
 
 	client := cloudwatchlogs.New(x.awsSession)
@@ -143,4 +173,16 @@ func (x *Generalprobe) Act() error {
 	}
 
 	return nil
+}
+
+func (x *Generalprobe) LogicalID(logicalID string) *LogicalIDTarget {
+	r := newLogicalID(logicalID)
+	r.setGeneralprobe(x)
+	return r
+}
+
+func (x *Generalprobe) Arn(logicalID string) *ArnTarget {
+	r := newArn(logicalID)
+	r.setGeneralprobe(x)
+	return r
 }

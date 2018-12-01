@@ -33,8 +33,8 @@ func init() {
 }
 
 type testParameters struct {
-	StackName    string `json:"StackName"`
-	Region       string `json:"Region"`
+	StackName string `json:"StackName"`
+	Region    string `json:"Region"`
 }
 
 func loadTestParameters() testParameters {
@@ -85,10 +85,10 @@ func TestSnsToDynamo(t *testing.T) {
 	g := gp.New(params.Region, params.StackName)
 	g.AddScenes([]gp.Scene{
 		// Send request
-		gp.PublishSnsMessage("Trigger", []byte(`{"id":"`+id+`"}`)),
+		gp.PublishSnsMessage(g.LogicalID("Trigger"), []byte(`{"id":"`+id+`"}`)),
 
 		// Recv result
-		gp.GetDynamoRecord("ResultStore", func(table dynamo.Table) bool {
+		gp.GetDynamoRecord(g.LogicalID("ResultStore"), func(table dynamo.Table) bool {
 			var resp []map[string]interface{}
 			err := table.Get("result_id", id).All(&resp)
 			log.WithField("dynamo resp", resp).Debug("get dynamo response")
@@ -100,7 +100,7 @@ func TestSnsToDynamo(t *testing.T) {
 		}),
 
 		gp.AdLib(func() {
-			logs := g.SearchLambdaLogs("TestHandler", id)
+			logs := g.SearchLambdaLogs(g.LogicalID("TestHandler"), id)
 			assert.NotEqual(t, 0, len(logs))
 		}),
 	})

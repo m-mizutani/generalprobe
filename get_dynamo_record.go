@@ -9,44 +9,28 @@ import (
 	"github.com/pkg/errors"
 )
 
-type TargetType int
-
-const (
-	LogicalID TargetType = iota
-	ARN
-)
-
 type getDynamoRecord struct {
-	target     string
-	targetType TargetType
+	target Target
 
 	callback GetDynamoRecordCallback
 	baseScene
 }
+
 // GetDynamoRecordCallback is callback function called after retrieving target record
 type GetDynamoRecordCallback func(table dynamo.Table) bool
+
 // GetDynamoRecord is a constructor of Scene
-func GetDynamoRecord(target string, callback GetDynamoRecordCallback) *getDynamoRecord {
+func GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *getDynamoRecord {
 	scene := getDynamoRecord{
-		target:     target,
-		targetType: LogicalID,
-		callback:   callback,
+		target:   target,
+		callback: callback,
 	}
 	return &scene
 }
 
-func (x *getDynamoRecord) SetTargetType(t TargetType) *getDynamoRecord {
-	x.targetType = t
-	return x
-}
-
 func (x *getDynamoRecord) play() error {
 	db := dynamo.New(session.New(), &aws.Config{Region: aws.String(x.region())})
-	tableName := x.target
-	if x.targetType == LogicalID {
-		tableName = x.lookupPhysicalID(x.target)
-	}
-	table := db.Table(tableName)
+	table := db.Table(x.target.name())
 	const maxRetry int = 30
 
 	for n := 0; n < maxRetry; n++ {
