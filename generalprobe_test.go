@@ -108,3 +108,21 @@ func TestSnsToDynamo(t *testing.T) {
 	g.Act()
 	require.Equal(t, true, done)
 }
+
+func TestKinesisStream(t *testing.T) {
+	params := loadTestParameters()
+
+	id := uuid.New().String()
+	g := gp.New(params.Region, params.StackName)
+	g.AddScenes([]gp.Scene{
+		// Send message
+		gp.PutKinesisStreamRecord(g.LogicalID("ResultStream"), []byte(id)),
+		gp.GetKinesisStreamRecord(g.LogicalID("ResultStream"), func(data []byte) bool {
+			assert.Equal(t, string(data), id)
+			return true
+		}),
+	})
+
+	g.Act()
+
+}

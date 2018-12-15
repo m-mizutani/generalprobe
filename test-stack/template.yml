@@ -42,6 +42,12 @@ Resources:
   ResultBucket:
     Type: AWS::S3::Bucket
 
+  ResultStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      RetentionPeriodHours: 24
+      ShardCount: 1
+
   # --------------------------------------------------------
   # IAM Roles
   LambdaRole:
