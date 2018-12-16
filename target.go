@@ -79,7 +79,7 @@ type ArnTarget struct {
 // Arn should be used to specify AWS resource out of CloudFormation template.
 func newArn(arn string) *ArnTarget {
 	sec := strings.Split(arn, ":")
-	if len(sec) != 6 {
+	if len(sec) < 6 || 8 < len(sec) {
 		log.WithField("arn", arn).Error("Invalid ARN format")
 	}
 	return &ArnTarget{arnData: arn}
