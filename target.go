@@ -92,11 +92,11 @@ func (x *ArnTarget) arn() string {
 func (x *ArnTarget) name() string {
 	// arn:partition:service:region:account-id:resource
 	sec := strings.Split(x.arnData, ":")
-
-	resName := strings.Split(sec[5], "/")
+	last := sec[len(sec)-1]
+	resName := strings.Split(last, "/")
 	if len(resName) == 2 {
 		return resName[1]
 	}
 
-	return sec[5]
+	return last
 }
