@@ -10,12 +10,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
+var logger = logrus.New()
+
 func init() {
-	log.SetLevel(log.DebugLevel)
+	logger.SetLevel(logrus.WarnLevel)
 }
+
+func SetLoggerDebugLevel() { logger.SetLevel(logrus.DebugLevel) }
+func SetLoggerInfoLevel()  { logger.SetLevel(logrus.InfoLevel) }
+func SetLoggerWarnLevel()  { logger.SetLevel(logrus.WarnLevel) }
 
 // Generalprobe is a main structure of the framework
 type Generalprobe struct {
@@ -50,7 +56,7 @@ func New(awsRegion, stackName string) Generalprobe {
 	})
 	// pp.Println(resp)
 	if err != nil {
-		log.Fatal("Fail to get CloudFormation Stack resources: ", err)
+		logger.Fatal("Fail to get CloudFormation Stack resources: ", err)
 	}
 
 	gp.resources = resp.StackResources
@@ -60,7 +66,7 @@ func New(awsRegion, stackName string) Generalprobe {
 	})
 
 	if err != nil {
-		log.Fatal("Fail to get detail of CloudFormation Stack instance", err, stackName)
+		logger.Fatal("Fail to get detail of CloudFormation Stack instance", err, stackName)
 	}
 
 	for _, stack := range stackResp.Stacks {
@@ -110,7 +116,7 @@ func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
 	var result []string
 	lambdaName := target.name()
 	if lambdaName == "" {
-		log.Error(fmt.Printf("No such lambda function: %s", target))
+		logger.Fatal(fmt.Printf("No such lambda function: %s", target))
 	}
 
 	client := cloudwatchlogs.New(x.awsSession)
@@ -131,10 +137,14 @@ func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
 		}
 
 		resp, err := client.FilterLogEvents(&input)
-		log.WithFields(log.Fields{"resp": resp, "input": input, "start": *input.StartTime}).Debug("Filtered log events")
+		logger.WithFields(logrus.Fields{
+			"resp":  resp,
+			"input": input,
+			"start": *input.StartTime,
+		}).Debug("Filtered log events")
 
 		if err != nil {
-			log.Fatal("Can not access to ClodwatchLogs", err)
+			logger.Fatal("Can not access to ClodwatchLogs", err)
 		}
 
 		for _, event := range resp.Events {

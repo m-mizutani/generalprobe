@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	log "github.com/sirupsen/logrus"
 )
 
 type putKinesisStreamRecord struct {
@@ -44,7 +43,7 @@ func (x *putKinesisStreamRecord) play() error {
 	}
 	resp, err := kinesisService.PutRecord(&kinesisInput)
 
-	log.WithField("resp", resp).Debug("Done Kinesis PutRecord")
+	logger.WithField("resp", resp).Debug("Done Kinesis PutRecord")
 	if err != nil {
 		return errors.Wrap(err, "Fail to put kinesis record")
 	}

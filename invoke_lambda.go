@@ -10,7 +10,6 @@ import (
 
 	// "github.com/k0kubun/pp"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type invokeLambda struct {
@@ -42,7 +41,7 @@ func toMessage(msg interface{}) string {
 	default:
 		raw, err := json.Marshal(v)
 		if err != nil {
-			log.WithField("message", msg).Fatal(err)
+			logger.WithField("message", msg).Fatal(err)
 		}
 		return string(raw)
 	}
@@ -84,10 +83,10 @@ func (x *invokeLambda) play() error {
 		Payload:      eventData,
 	})
 	if err != nil {
-		log.Fatal("Fail to invoke lambda", err)
+		logger.Fatal("Fail to invoke lambda", err)
 	}
 
-	log.WithField("response", resp).Debug("lamba invoked")
+	logger.WithField("response", resp).Debug("lamba invoked")
 
 	x.callback(resp.Payload)
 

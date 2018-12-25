@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	log "github.com/sirupsen/logrus"
 )
 
 type getKinesisStreamRecord struct {
@@ -43,7 +42,7 @@ func (x *getKinesisStreamRecord) play() error {
 		StreamName: aws.String(streamName),
 	})
 	if err != nil {
-		log.Fatal("Fail to shard list", err)
+		logger.Fatal("Fail to shard list", err)
 	}
 
 	shardList := []string{}
@@ -52,7 +51,7 @@ func (x *getKinesisStreamRecord) play() error {
 	}
 
 	if len(shardList) != 1 {
-		log.Fatal("Invalid shard number: ", len(shardList), ", expected 1")
+		logger.Fatal("Invalid shard number: ", len(shardList), ", expected 1")
 	}
 
 	now := time.Now()
@@ -64,7 +63,7 @@ func (x *getKinesisStreamRecord) play() error {
 		Timestamp:         &now,
 	})
 	if err != nil {
-		log.Fatal("Fail to get iterator", err)
+		logger.Fatal("Fail to get iterator", err)
 	}
 
 	shardIter := iter.ShardIterator
@@ -74,7 +73,7 @@ func (x *getKinesisStreamRecord) play() error {
 		})
 
 		if err != nil {
-			log.WithField("records", records).Fatal("Fail to get kinesis records")
+			logger.WithField("records", records).Fatal("Fail to get kinesis records")
 		}
 		shardIter = records.NextShardIterator
 
