@@ -4,13 +4,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
+
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 type publishSnsMessage struct {
 	target  Target
 	message []byte
+	attrs   SnsMessageAttributes
 	baseScene
 }
 
@@ -18,6 +19,17 @@ func PublishSnsMessage(target Target, message []byte) *publishSnsMessage {
 	scene := publishSnsMessage{
 		target:  target,
 		message: message,
+	}
+	return &scene
+}
+
+type SnsMessageAttributes map[string]*sns.MessageAttributeValue
+
+func PublishSnsMessageWithAttributes(target Target, message []byte, attrs SnsMessageAttributes) *publishSnsMessage {
+	scene := publishSnsMessage{
+		target:  target,
+		message: message,
+		attrs:   attrs,
 	}
 	return &scene
 }
@@ -30,11 +42,12 @@ func (x *publishSnsMessage) play() error {
 
 	topicArn := x.target.arn()
 	resp, err := snsService.Publish(&sns.PublishInput{
-		Message:  aws.String(string(x.message)),
-		TopicArn: aws.String(topicArn),
+		Message:           aws.String(string(x.message)),
+		TopicArn:          aws.String(topicArn),
+		MessageAttributes: x.attrs,
 	})
 
-	log.WithField("result", resp).Debug("sns:Publish result")
+	logger.WithField("result", resp).Debug("sns:Publish result")
 
 	if err != nil {
 		return errors.Wrap(err, "Fail to publish report")
