@@ -9,27 +9,29 @@ import (
 	"github.com/google/uuid"
 	"github.com/guregu/dynamo"
 	gp "github.com/m-mizutani/generalprobe"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var logger = logrus.New()
+
 func init() {
-	logLevel := log.WarnLevel
+	logLevel := logrus.WarnLevel
 	switch os.Getenv("GP_LOG_LEVEL") {
 	case "TRACE":
-		logLevel = log.TraceLevel
+		logLevel = logrus.TraceLevel
 	case "DEBUG":
-		logLevel = log.DebugLevel
+		logLevel = logrus.DebugLevel
 	case "INFO":
-		logLevel = log.InfoLevel
+		logLevel = logrus.InfoLevel
 	case "WARN":
-		logLevel = log.WarnLevel
+		logLevel = logrus.WarnLevel
 	case "ERROR":
-		logLevel = log.ErrorLevel
+		logLevel = logrus.ErrorLevel
 
 	}
-	log.SetLevel(logLevel)
+	logger.SetLevel(logLevel)
 }
 
 type testParameters struct {
@@ -41,19 +43,19 @@ func loadTestParameters() testParameters {
 	paramFile := "test-stack/params.json"
 	fd, err := os.Open(paramFile)
 	if err != nil {
-		log.Printf("Can not open")
-		log.Error(err)
+		logger.Printf("Can not open")
+		logger.Error(err)
 	}
 
 	data, err := ioutil.ReadAll(fd)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	var p testParameters
 	err = json.Unmarshal(data, &p)
 	if err != nil {
-		log.Error(err)
+		logger.Error(err)
 	}
 
 	return p
@@ -91,7 +93,7 @@ func TestSnsToDynamo(t *testing.T) {
 		gp.GetDynamoRecord(g.LogicalID("ResultStore"), func(table dynamo.Table) bool {
 			var resp []map[string]interface{}
 			err := table.Get("result_id", id).All(&resp)
-			log.WithField("dynamo resp", resp).Debug("get dynamo response")
+			logger.WithField("dynamo resp", resp).Debug("get dynamo response")
 			require.NoError(t, err)
 			assert.Equal(t, 1, len(resp))
 			assert.Equal(t, id, resp[0]["result_id"].(string))
@@ -100,7 +102,10 @@ func TestSnsToDynamo(t *testing.T) {
 		}),
 
 		gp.AdLib(func() {
-			logs := g.SearchLambdaLogs(g.LogicalID("TestHandler"), id)
+			logs := g.SearchLambdaLogs(gp.SearchLambdaLogsArgs{
+				LambdaTarget: g.LogicalID("TestHandler"),
+				Filter:       id,
+			})
 			assert.NotEqual(t, 0, len(logs))
 		}),
 	})
@@ -125,4 +130,16 @@ func TestKinesisStream(t *testing.T) {
 
 	g.Act()
 
+}
+
+func TestSearchLambdaLogsNotFound(t *testing.T) {
+	params := loadTestParameters()
+	g := gp.New(params.Region, params.StackName)
+
+	logs := g.SearchLambdaLogs(gp.SearchLambdaLogsArgs{
+		LambdaTarget: g.Arn("arn:aws:lambda:ap-northeast-1:1234567890:function:no-such-function"),
+		QueryLimit:   1,
+	})
+
+	assert.Equal(t, 0, len(logs))
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -108,29 +109,43 @@ func toMilliSec(t time.Time) *int64 {
 	return &u
 }
 
+type SearchLambdaLogsArgs struct {
+	LambdaTarget Target
+	Filter       string
+	QueryLimit   uint
+	Interval     uint
+}
+
 // SearchLambdaLogs sends query to ClodWatchLogs and retrieve logs output by Lambda
-func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
-	const maxRetry = 20
-	const interval = 3
+func (x *Generalprobe) SearchLambdaLogs(args SearchLambdaLogsArgs) []string {
+	const defaultQueryLimit = 20
+	const defaultInterval = 3
+
+	if args.QueryLimit == 0 {
+		args.QueryLimit = defaultQueryLimit
+	}
+	if args.Interval == 0 {
+		args.Interval = defaultInterval
+	}
 
 	var result []string
-	lambdaName := target.name()
+	lambdaName := args.LambdaTarget.name()
 	if lambdaName == "" {
-		logger.Fatal(fmt.Printf("No such lambda function: %s", target))
+		logger.Fatal(fmt.Printf("No such lambda function: %s", args.LambdaTarget))
 	}
 
 	client := cloudwatchlogs.New(x.awsSession)
 	nextToken := ""
 	now := time.Now().UTC()
 
-	for n := 0; n < maxRetry; n++ {
+	for n := uint(0); n <= args.QueryLimit; n++ {
 		input := cloudwatchlogs.FilterLogEventsInput{
 			LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", lambdaName)),
 			StartTime:    toMilliSec(x.StartTime.Add(time.Minute * -1)),
 			EndTime:      toMilliSec(now.Add(time.Minute * 1)),
 		}
-		if filter != "" {
-			input.FilterPattern = aws.String(fmt.Sprintf("\"%s\"", filter))
+		if args.Filter != "" {
+			input.FilterPattern = aws.String(fmt.Sprintf("\"%s\"", args.Filter))
 		}
 		if nextToken != "" {
 			input.NextToken = aws.String(nextToken)
@@ -143,7 +158,14 @@ func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
 			"start": *input.StartTime,
 		}).Debug("Filtered log events")
 
-		if err != nil {
+		if nil != err {
+			if aerr, ok := err.(awserr.Error); ok {
+				switch aerr.Code() {
+				case cloudwatchlogs.ErrCodeResourceNotFoundException:
+					continue
+				}
+			}
+
 			logger.Fatal("Can not access to ClodwatchLogs", err)
 		}
 
@@ -155,7 +177,7 @@ func (x *Generalprobe) SearchLambdaLogs(target Target, filter string) []string {
 
 		if resp.NextToken == nil {
 			if len(result) == 0 {
-				time.Sleep(time.Second * interval)
+				time.Sleep(time.Second * time.Duration(args.Interval))
 				continue
 			}
 			break
