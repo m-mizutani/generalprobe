@@ -75,7 +75,7 @@ func TestBasicUsage(t *testing.T) {
 			n++
 		}),
 	})
-	g.Act()
+	g.Run()
 	assert.Equal(t, 2, n)
 }
 
@@ -110,7 +110,7 @@ func TestSnsToDynamo(t *testing.T) {
 		}),
 	})
 
-	g.Act()
+	g.Run()
 	require.Equal(t, true, done)
 }
 
@@ -128,7 +128,7 @@ func TestKinesisStream(t *testing.T) {
 		}),
 	})
 
-	g.Act()
+	g.Run()
 
 }
 

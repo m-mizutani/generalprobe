@@ -196,10 +196,11 @@ func (x *Generalprobe) AddScenes(newScenes []Scene) {
 	}
 }
 
-// Act invokes test according to appended Scenes.
-func (x *Generalprobe) Act() error {
+// Run invokes test according to appended Scenes.
+func (x *Generalprobe) Run() error {
 	for _, scene := range x.scenes {
 		if err := scene.play(); err != nil {
+			logger.WithField("error", err).Error("Failed Generalprobe")
 			return err
 		}
 	}
