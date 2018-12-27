@@ -67,11 +67,11 @@ func TestBasicUsage(t *testing.T) {
 
 	n := 0
 	g.AddScenes([]gp.Scene{
-		gp.AdLib(func() {
+		g.AdLib(func() {
 			n++
 		}),
-		gp.Pause(1),
-		gp.AdLib(func() {
+		g.Pause(1),
+		g.AdLib(func() {
 			n++
 		}),
 	})
@@ -87,10 +87,10 @@ func TestSnsToDynamo(t *testing.T) {
 	g := gp.New(params.Region, params.StackName)
 	g.AddScenes([]gp.Scene{
 		// Send request
-		gp.PublishSnsMessage(g.LogicalID("Trigger"), []byte(`{"id":"`+id+`"}`)),
+		g.PublishSnsMessage(g.LogicalID("Trigger"), []byte(`{"id":"`+id+`"}`)),
 
 		// Recv result
-		gp.GetDynamoRecord(g.LogicalID("ResultStore"), func(table dynamo.Table) bool {
+		g.GetDynamoRecord(g.LogicalID("ResultStore"), func(table dynamo.Table) bool {
 			var resp []map[string]interface{}
 			err := table.Get("result_id", id).All(&resp)
 			logger.WithField("dynamo resp", resp).Debug("get dynamo response")
@@ -101,7 +101,7 @@ func TestSnsToDynamo(t *testing.T) {
 			return true
 		}),
 
-		gp.AdLib(func() {
+		g.AdLib(func() {
 			logs := g.SearchLambdaLogs(gp.SearchLambdaLogsArgs{
 				LambdaTarget: g.LogicalID("TestHandler"),
 				Filter:       id,
@@ -121,8 +121,8 @@ func TestKinesisStream(t *testing.T) {
 	g := gp.New(params.Region, params.StackName)
 	g.AddScenes([]gp.Scene{
 		// Send message
-		gp.PutKinesisStreamRecord(g.LogicalID("ResultStream"), []byte(id)),
-		gp.GetKinesisStreamRecord(g.LogicalID("ResultStream"), func(data []byte) bool {
+		g.PutKinesisStreamRecord(g.LogicalID("ResultStream"), []byte(id)),
+		g.GetKinesisStreamRecord(g.LogicalID("ResultStream"), func(data []byte) bool {
 			assert.Equal(t, string(data), id)
 			return true
 		}),

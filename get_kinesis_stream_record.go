@@ -20,7 +20,7 @@ type getKinesisStreamRecord struct {
 type GetKinesisStreamRecordCallback func(data []byte) bool
 
 // GetKinesisStreamRecord is a constructor of Scene
-func GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
+func (x *Generalprobe) GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
 	scene := getKinesisStreamRecord{
 		target:   target,
 		callback: callback,

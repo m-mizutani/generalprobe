@@ -24,7 +24,7 @@ type invokeLambda struct {
 type InvokeLambdaCallback func(response []byte)
 
 // InvokeLambda is a constructor of Scene
-func InvokeLambda(target Target, callback InvokeLambdaCallback) *invokeLambda {
+func (x *Generalprobe) InvokeLambda(target Target, callback InvokeLambdaCallback) *invokeLambda {
 	scene := invokeLambda{
 		target:   target,
 		callback: callback,

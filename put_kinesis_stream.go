@@ -18,7 +18,7 @@ type putKinesisStreamRecord struct {
 }
 
 // PutKinesisStreamRecord is a constructor of Scene
-func PutKinesisStreamRecord(target Target, message []byte) *putKinesisStreamRecord {
+func (x *Generalprobe) PutKinesisStreamRecord(target Target, message []byte) *putKinesisStreamRecord {
 	scene := putKinesisStreamRecord{
 		target:  target,
 		message: message,

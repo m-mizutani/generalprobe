@@ -21,7 +21,7 @@ type adLib struct {
 }
 type AdLibCallback func()
 
-func AdLib(callback AdLibCallback) *adLib {
+func (x *Generalprobe) AdLib(callback AdLibCallback) *adLib {
 	scene := adLib{
 		callback: callback,
 	}

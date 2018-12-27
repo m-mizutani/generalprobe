@@ -20,7 +20,7 @@ type getDynamoRecord struct {
 type GetDynamoRecordCallback func(table dynamo.Table) bool
 
 // GetDynamoRecord is a constructor of Scene
-func GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *getDynamoRecord {
+func (x *Generalprobe) GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *getDynamoRecord {
 	scene := getDynamoRecord{
 		target:   target,
 		callback: callback,

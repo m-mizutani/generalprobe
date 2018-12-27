@@ -7,7 +7,7 @@ type pauseScene struct {
 	baseScene
 }
 
-func Pause(interval uint) *pauseScene {
+func (x *Generalprobe) Pause(interval uint) *pauseScene {
 	scene := pauseScene{
 		interval: interval,
 	}

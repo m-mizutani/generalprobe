@@ -15,7 +15,7 @@ type publishSnsMessage struct {
 	baseScene
 }
 
-func PublishSnsMessage(target Target, message []byte) *publishSnsMessage {
+func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *publishSnsMessage {
 	scene := publishSnsMessage{
 		target:  target,
 		message: message,
