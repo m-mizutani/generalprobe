@@ -101,12 +101,9 @@ func TestSnsToDynamo(t *testing.T) {
 			return true
 		}),
 
-		g.AdLib(func() {
-			logs := g.SearchLambdaLogs(gp.SearchLambdaLogsArgs{
-				LambdaTarget: g.LogicalID("TestHandler"),
-				Filter:       id,
-			})
+		g.GetLambdaLogs(g.LogicalID("TestHandler"), id, func(logs []string) bool {
 			assert.NotEqual(t, 0, len(logs))
+			return true
 		}),
 	})
 

@@ -8,6 +8,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+type SnsMessageAttributes map[string]*sns.MessageAttributeValue
+
 type publishSnsMessage struct {
 	target  Target
 	message []byte
@@ -23,15 +25,9 @@ func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *publish
 	return &scene
 }
 
-type SnsMessageAttributes map[string]*sns.MessageAttributeValue
-
-func PublishSnsMessageWithAttributes(target Target, message []byte, attrs SnsMessageAttributes) *publishSnsMessage {
-	scene := publishSnsMessage{
-		target:  target,
-		message: message,
-		attrs:   attrs,
-	}
-	return &scene
+func (x *publishSnsMessage) AddMessageAttributes(attrs SnsMessageAttributes) *publishSnsMessage {
+	x.attrs = attrs
+	return x
 }
 
 func (x *publishSnsMessage) play() error {
