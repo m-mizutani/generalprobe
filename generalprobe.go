@@ -2,6 +2,7 @@ package generalprobe
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -198,9 +199,16 @@ func (x *Generalprobe) AddScenes(newScenes []Scene) {
 
 // Run invokes test according to appended Scenes.
 func (x *Generalprobe) Run() error {
-	for _, scene := range x.scenes {
+	for idx, scene := range x.scenes {
+		logger.Infof("Step %d: %s\n", idx, reflect.TypeOf(scene))
+
 		if err := scene.play(); err != nil {
-			logger.WithField("error", err).Error("Failed Generalprobe")
+			logger.WithFields(logrus.Fields{
+				"sceneType": reflect.TypeOf(scene),
+				"sceneNo":   idx,
+				"scene":     scene,
+				"error":     err,
+			}).Error("Failed Generalprobe")
 			return err
 		}
 	}
