@@ -1,7 +1,10 @@
 package generalprobe
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type GetLambdaLogsCallback func(logs []string) bool
+type GetLambdaLogsCallback func(logs CloudWatchLogs) bool
 
 type getLambdaLogs struct {
 	target     Target
@@ -20,6 +23,17 @@ type getLambdaLogs struct {
 	interval   uint
 	callback   GetLambdaLogsCallback
 	baseScene
+}
+
+type CloudWatchLogs string
+
+func (x CloudWatchLogs) Bind(data interface{}) {
+	if err := json.Unmarshal([]byte(x), data); err != nil {
+		log.Fatalf("Fail to unmarshal CloudWatchLogs: %s", x)
+	}
+}
+func (x CloudWatchLogs) Find(key string) bool {
+	return strings.Index(string(x), key) >= 0
 }
 
 func (x *Generalprobe) GetLambdaLogs(target Target, filter string, callback GetLambdaLogsCallback) *getLambdaLogs {
@@ -92,7 +106,7 @@ func (x *getLambdaLogs) play() error {
 
 		for _, event := range resp.Events {
 			if event.Message != nil {
-				if x.callback([]string{*event.Message}) {
+				if x.callback(CloudWatchLogs(*event.Message)) {
 					return nil
 				}
 			}
@@ -105,7 +119,7 @@ func (x *getLambdaLogs) play() error {
 		}
 	}
 
-	if !x.callback([]string{}) {
+	if !x.callback(CloudWatchLogs("")) {
 		return errors.New("No expected logs from CloudWatch Logs")
 	}
 

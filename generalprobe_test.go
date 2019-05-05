@@ -101,8 +101,8 @@ func TestSnsToDynamo(t *testing.T) {
 			return true
 		}),
 
-		g.GetLambdaLogs(g.LogicalID("TestHandler"), id, func(logs []string) bool {
-			assert.NotEqual(t, 0, len(logs))
+		g.GetLambdaLogs(g.LogicalID("TestHandler"), id, func(logs gp.CloudWatchLogs) bool {
+			assert.True(t, logs.Find(id))
 			return true
 		}),
 	})
