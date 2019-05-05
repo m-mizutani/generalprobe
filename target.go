@@ -44,6 +44,7 @@ func (x *LogicalIDTarget) toArn(physicalID string) string {
 		"AWS::Lambda::Function": serviceHint{"lambda", ""},
 		"AWS::SNS::Topic":       serviceHint{"sns", ""},
 		"AWS::DynamoDB::Table":  serviceHint{"dynamodb", "table/"},
+		"AWS::Kinesis::Stream":  serviceHint{"kinesis", "stream/"},
 	}
 
 	resourceType := x.gp.LookupType(x.LogicalID)

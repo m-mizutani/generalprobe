@@ -47,7 +47,7 @@ func toMessage(msg interface{}) string {
 	}
 }
 
-func (x *invokeLambda) SnsMessage(input interface{}) *invokeLambda {
+func (x *invokeLambda) SnsEvent(input interface{}) *invokeLambda {
 	msg := toMessage(input)
 	event := events.SNSEvent{
 		Records: []events.SNSEventRecord{
@@ -58,10 +58,10 @@ func (x *invokeLambda) SnsMessage(input interface{}) *invokeLambda {
 			},
 		},
 	}
-	return x.SetEvent(event)
+	return x.Event(event)
 }
 
-func (x *invokeLambda) SetEvent(event interface{}) *invokeLambda {
+func (x *invokeLambda) Event(event interface{}) *invokeLambda {
 	x.event = event
 	return x
 }
@@ -89,21 +89,6 @@ func (x *invokeLambda) play() error {
 	logger.WithField("response", resp).Debug("lamba invoked")
 
 	x.callback(resp.Payload)
-
-	/*
-		var receptorResp receptorResponse
-		err = json.Unmarshal(resp.Payload, &receptorResp)
-		if err != nil {
-			pp.Println(string(resp.Payload))
-			return "", errors.Wrap(err, "unmarshal receptor's response")
-		}
-		if len(receptorResp.ReportIDs) != 1 {
-			pp.Println(receptorResp)
-			return "", errors.Wrap(err, "invalid number of report ID set")
-		}
-
-		return receptorResp.ReportIDs[0], nil
-	*/
 
 	return nil
 }

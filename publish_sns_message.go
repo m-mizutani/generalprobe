@@ -2,6 +2,7 @@ package generalprobe
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,24 +12,28 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SnsMessageAttributes is type to configure MessageAttributes of SNS.
 type SnsMessageAttributes map[string]*sns.MessageAttributeValue
 
-type PublishSns struct {
+// PublishSnsScene is a scene to publish SNS message.
+type PublishSnsScene struct {
 	target  Target
 	message []byte
 	attrs   SnsMessageAttributes
 	baseScene
 }
 
-func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *PublishSns {
-	scene := PublishSns{
+// PublishSnsMessage creates a scene of SNS Publish with byte sequence message.
+func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *PublishSnsScene {
+	scene := PublishSnsScene{
 		target:  target,
 		message: message,
 	}
 	return &scene
 }
 
-func (x *Generalprobe) PublishSnsData(target Target, data interface{}) *PublishSns {
+// PublishSnsData creates a scene of SNS Publish with structure data.
+func (x *Generalprobe) PublishSnsData(target Target, data interface{}) *PublishSnsScene {
 	msg, err := json.Marshal(data)
 	if err != nil {
 		log.Fatalf("Fail to marshal data for SNS publish: %v", data)
@@ -37,12 +42,18 @@ func (x *Generalprobe) PublishSnsData(target Target, data interface{}) *PublishS
 	return x.PublishSnsMessage(target, msg)
 }
 
-func (x *PublishSns) AddMessageAttributes(attrs SnsMessageAttributes) *PublishSns {
+// MessageAttributes sets attribute of SNS MessageAttributes map
+func (x *PublishSnsScene) MessageAttributes(attrs SnsMessageAttributes) *PublishSnsScene {
 	x.attrs = attrs
 	return x
 }
 
-func (x *PublishSns) play() error {
+// Strings return text explanation of the scene
+func (x *PublishSnsScene) String() string {
+	return fmt.Sprintf("SNS message to %s", x.target.arn())
+}
+
+func (x *PublishSnsScene) play() error {
 	ssn := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(x.region()),
 	}))

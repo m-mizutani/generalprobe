@@ -11,22 +11,28 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 )
 
-type putKinesisStreamRecord struct {
+// PutKinesisStreamRecordScene is a scene to put a new Kinesis record.
+type PutKinesisStreamRecordScene struct {
 	target Target
 	baseScene
 	message []byte
 }
 
 // PutKinesisStreamRecord is a constructor of Scene
-func (x *Generalprobe) PutKinesisStreamRecord(target Target, message []byte) *putKinesisStreamRecord {
-	scene := putKinesisStreamRecord{
+func (x *Generalprobe) PutKinesisStreamRecord(target Target, message []byte) *PutKinesisStreamRecordScene {
+	scene := PutKinesisStreamRecordScene{
 		target:  target,
 		message: message,
 	}
 	return &scene
 }
 
-func (x *putKinesisStreamRecord) play() error {
+// Strings return text explanation of the scene
+func (x *PutKinesisStreamRecordScene) String() string {
+	return fmt.Sprintf("Put a new kinesis record to %s", x.target.arn())
+}
+
+func (x *PutKinesisStreamRecordScene) play() error {
 	const maxRetry = 20
 
 	streamName := x.target.name()

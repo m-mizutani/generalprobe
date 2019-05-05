@@ -1,20 +1,30 @@
 package generalprobe
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-type pauseScene struct {
-	interval uint
+// PauseScene is a scene of just sleeping
+type PauseScene struct {
+	interval int
 	baseScene
 }
 
-func (x *Generalprobe) Pause(interval uint) *pauseScene {
-	scene := pauseScene{
+// Pause creats a scene of sleeping.
+func (x *Generalprobe) Pause(interval int) *PauseScene {
+	scene := PauseScene{
 		interval: interval,
 	}
 	return &scene
 }
 
-func (x *pauseScene) play() error {
+// String returns text explanation of the scene
+func (x *PauseScene) String() string {
+	return fmt.Sprintf("Pausing %d seconds", x.interval)
+}
+
+func (x *PauseScene) play() error {
 	time.Sleep(time.Second * time.Duration(x.interval))
 	return nil
 }

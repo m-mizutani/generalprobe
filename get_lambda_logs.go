@@ -14,55 +14,60 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// GetLambdaLogsCallback is a callback type of GetLambdaLogs
 type GetLambdaLogsCallback func(logs CloudWatchLog) bool
 
-type getLambdaLogs struct {
-	target     Target
-	filter     string
-	queryLimit uint
-	interval   uint
-	callback   GetLambdaLogsCallback
-	baseScene
+// GetLambdaLogs is a scene of waiting AWS Lambda logs
+type GetLambdaLogs struct {
+	target   Target
+	filter   string
+	callback GetLambdaLogsCallback
+	pollingScene
 }
 
+// CloudWatchLog come from message part of CloudWatch Logs Events.
+// The type provides utility methods for tests.
 type CloudWatchLog string
 
+// Bind marshal json to structure. If error, test will exit by log.Fatalf
 func (x CloudWatchLog) Bind(data interface{}) {
 	if err := json.Unmarshal([]byte(x), data); err != nil {
 		log.Fatalf("Fail to unmarshal CloudWatchLog: %s", x)
 	}
 }
+
+// Contains search string in the log message
 func (x CloudWatchLog) Contains(key string) bool {
 	return strings.Index(string(x), key) >= 0
 }
 
-func (x *Generalprobe) GetLambdaLogs(target Target, callback GetLambdaLogsCallback) *getLambdaLogs {
-	scene := getLambdaLogs{
-		target:     target,
-		callback:   callback,
-		queryLimit: 20,
-		interval:   3,
+// GetLambdaLogs creates a new scene to wait AWS Lambda output from CloudWatchLogs
+func (x *Generalprobe) GetLambdaLogs(target Target, callback GetLambdaLogsCallback) *GetLambdaLogs {
+	scene := GetLambdaLogs{
+		target:   target,
+		callback: callback,
+		pollingScene: pollingScene{
+			limit:    20,
+			interval: 3,
+		},
 	}
 
 	return &scene
 }
 
-func (x *getLambdaLogs) Filter(filter string) *getLambdaLogs {
+// Filter sets filtering keyword to search CloudWatch Logs.
+// Default is empty. The filter keyword will be quote automatically when querying.
+func (x *GetLambdaLogs) Filter(filter string) *GetLambdaLogs {
 	x.filter = filter
 	return x
 }
 
-func (x *getLambdaLogs) QueryLimit(queryLimit uint) *getLambdaLogs {
-	x.queryLimit = queryLimit
-	return x
+// Strings return text explanation of the scene
+func (x *GetLambdaLogs) String() string {
+	return fmt.Sprintf("Reading Lambda Logs of %s", x.target.arn())
 }
 
-func (x *getLambdaLogs) Interval(interval uint) *getLambdaLogs {
-	x.interval = interval
-	return x
-}
-
-func (x *getLambdaLogs) play() error {
+func (x *GetLambdaLogs) play() error {
 	lambdaName := x.target.name()
 	if lambdaName == "" {
 		logger.Fatal(fmt.Printf("No such lambda function: %s", x.target))
@@ -72,7 +77,7 @@ func (x *getLambdaLogs) play() error {
 	nextToken := ""
 	now := time.Now().UTC()
 
-	for n := uint(0); n <= x.queryLimit; n++ {
+	for n := 0; n <= x.limit; n++ {
 		input := cloudwatchlogs.FilterLogEventsInput{
 			LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", lambdaName)),
 			StartTime:    toMilliSec(x.startTime().Add(time.Minute * -1)),

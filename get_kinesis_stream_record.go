@@ -1,6 +1,7 @@
 package generalprobe
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -10,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 )
 
-type getKinesisStreamRecord struct {
+// GetKinesisStreamRecordScene is a scene of waiting Kinesis record.
+type GetKinesisStreamRecordScene struct {
 	target Target
-	baseScene
+	pollingScene
 	callback GetKinesisStreamRecordCallback
 }
 
@@ -20,17 +22,23 @@ type getKinesisStreamRecord struct {
 type GetKinesisStreamRecordCallback func(data []byte) bool
 
 // GetKinesisStreamRecord is a constructor of Scene
-func (x *Generalprobe) GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *getKinesisStreamRecord {
-	scene := getKinesisStreamRecord{
+func (x *Generalprobe) GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *GetKinesisStreamRecordScene {
+	scene := GetKinesisStreamRecordScene{
 		target:   target,
 		callback: callback,
+		pollingScene: pollingScene{
+			limit:    20,
+			interval: 3,
+		},
 	}
 	return &scene
 }
 
-func (x *getKinesisStreamRecord) play() error {
-	const maxRetry = 20
+func (x *GetKinesisStreamRecordScene) String() string {
+	return fmt.Sprintf("Get Kinesis Record from %s", x.target.arn())
+}
 
+func (x *GetKinesisStreamRecordScene) play() error {
 	streamName := x.target.name()
 
 	ssn := session.Must(session.NewSession(&aws.Config{
@@ -67,7 +75,7 @@ func (x *getKinesisStreamRecord) play() error {
 	}
 
 	shardIter := iter.ShardIterator
-	for i := 0; i < maxRetry; i++ {
+	for i := 0; i < x.limit; i++ {
 		records, err := kinesisService.GetRecords(&kinesis.GetRecordsInput{
 			ShardIterator: shardIter,
 		})
@@ -85,7 +93,7 @@ func (x *getKinesisStreamRecord) play() error {
 			}
 		}
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * time.Duration(x.interval))
 	}
 
 	return errors.New("No kinesis message")

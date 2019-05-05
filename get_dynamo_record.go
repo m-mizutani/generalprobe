@@ -1,6 +1,7 @@
 package generalprobe
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,36 +10,47 @@ import (
 	"github.com/pkg/errors"
 )
 
-type getDynamoRecord struct {
+// GetDynamoRecordScene is a scene of waiting DynamoDB data.
+type GetDynamoRecordScene struct {
 	target Target
 
 	callback GetDynamoRecordCallback
-	baseScene
+	pollingScene
 }
 
 // GetDynamoRecordCallback is callback function called after retrieving target record
 type GetDynamoRecordCallback func(table dynamo.Table) bool
 
 // GetDynamoRecord is a constructor of Scene
-func (x *Generalprobe) GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *getDynamoRecord {
-	scene := getDynamoRecord{
+func (x *Generalprobe) GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *GetDynamoRecordScene {
+	scene := GetDynamoRecordScene{
 		target:   target,
 		callback: callback,
+		pollingScene: pollingScene{
+			limit:    20,
+			interval: 3,
+		},
 	}
 	return &scene
 }
 
-func (x *getDynamoRecord) play() error {
-	db := dynamo.New(session.New(), &aws.Config{Region: aws.String(x.region())})
+// Strings return text explanation of the scene
+func (x *GetDynamoRecordScene) String() string {
+	return fmt.Sprintf("Read DynamoDB of %s", x.target.arn())
+}
+
+func (x *GetDynamoRecordScene) play() error {
+	db := dynamo.New(session.New(), &aws.Config{
+		Region: aws.String(x.region()),
+	})
 	table := db.Table(x.target.name())
-	const maxRetry int = 30
 
-	for n := 0; n < maxRetry; n++ {
-		time.Sleep(time.Second * 2)
-
+	for n := 0; n < x.limit; n++ {
 		if x.callback(table) {
 			return nil
 		}
+
+		time.Sleep(time.Second * time.Duration(x.interval))
 	}
 
 	return errors.New("Timeout to fetch records from DynamoDB")

@@ -95,10 +95,14 @@ func TestSnsToDynamo(t *testing.T) {
 			err := table.Get("result_id", id).All(&resp)
 			logger.WithField("dynamo resp", resp).Debug("get dynamo response")
 			require.NoError(t, err)
-			assert.Equal(t, 1, len(resp))
-			assert.Equal(t, id, resp[0]["result_id"].(string))
-			done = true
-			return true
+			if len(resp) > 0 {
+				assert.Equal(t, 1, len(resp))
+				assert.Equal(t, id, resp[0]["result_id"].(string))
+				done = true
+				return true
+			}
+
+			return false
 		}),
 
 		g.GetLambdaLogs(g.LogicalID("TestHandler"), func(logs gp.CloudWatchLog) bool {
@@ -127,16 +131,4 @@ func TestKinesisStream(t *testing.T) {
 
 	g.Run()
 
-}
-
-func TestSearchLambdaLogsNotFound(t *testing.T) {
-	params := loadTestParameters()
-	g := gp.New(params.Region, params.StackName)
-
-	logs := g.SearchLambdaLogs(gp.SearchLambdaLogsArgs{
-		LambdaTarget: g.Arn("arn:aws:lambda:ap-northeast-1:1234567890:function:no-such-function"),
-		QueryLimit:   1,
-	})
-
-	assert.Equal(t, 0, len(logs))
 }
