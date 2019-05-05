@@ -32,7 +32,7 @@ func (x CloudWatchLog) Bind(data interface{}) {
 		log.Fatalf("Fail to unmarshal CloudWatchLog: %s", x)
 	}
 }
-func (x CloudWatchLog) Find(key string) bool {
+func (x CloudWatchLog) Contains(key string) bool {
 	return strings.Index(string(x), key) >= 0
 }
 
@@ -106,9 +106,7 @@ func (x *getLambdaLogs) play() error {
 		}
 
 		for _, event := range resp.Events {
-			if event.Message != nil &&
-				(x.filter == "" || strings.Index(*event.Message, x.filter) >= 0) {
-
+			if event.Message != nil {
 				if x.callback(CloudWatchLog(*event.Message)) {
 					return nil
 				}
