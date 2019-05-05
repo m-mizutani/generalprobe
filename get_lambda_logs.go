@@ -14,7 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type GetLambdaLogsCallback func(logs CloudWatchLogs) bool
+type GetLambdaLogsCallback func(logs CloudWatchLog) bool
 
 type getLambdaLogs struct {
 	target     Target
@@ -25,14 +25,14 @@ type getLambdaLogs struct {
 	baseScene
 }
 
-type CloudWatchLogs string
+type CloudWatchLog string
 
-func (x CloudWatchLogs) Bind(data interface{}) {
+func (x CloudWatchLog) Bind(data interface{}) {
 	if err := json.Unmarshal([]byte(x), data); err != nil {
-		log.Fatalf("Fail to unmarshal CloudWatchLogs: %s", x)
+		log.Fatalf("Fail to unmarshal CloudWatchLog: %s", x)
 	}
 }
-func (x CloudWatchLogs) Find(key string) bool {
+func (x CloudWatchLog) Find(key string) bool {
 	return strings.Index(string(x), key) >= 0
 }
 
@@ -106,7 +106,7 @@ func (x *getLambdaLogs) play() error {
 
 		for _, event := range resp.Events {
 			if event.Message != nil {
-				if x.callback(CloudWatchLogs(*event.Message)) {
+				if x.callback(CloudWatchLog(*event.Message)) {
 					return nil
 				}
 			}
@@ -119,7 +119,7 @@ func (x *getLambdaLogs) play() error {
 		}
 	}
 
-	if !x.callback(CloudWatchLogs("")) {
+	if !x.callback(CloudWatchLog("")) {
 		return errors.New("No expected logs from CloudWatch Logs")
 	}
 
