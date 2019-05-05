@@ -200,7 +200,7 @@ func (x *Generalprobe) AddScenes(newScenes []Scene) {
 // Run invokes test according to appended Scenes.
 func (x *Generalprobe) Run() error {
 	for idx, scene := range x.scenes {
-		logger.Infof("Step %d: %s\n", idx, reflect.TypeOf(scene))
+		logger.Infof("Step (%d/%d): %s\n", idx+1, len(x.scenes), reflect.TypeOf(scene))
 
 		if err := scene.play(); err != nil {
 			logger.WithFields(logrus.Fields{

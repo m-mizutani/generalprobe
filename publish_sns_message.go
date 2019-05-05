@@ -1,6 +1,9 @@
 package generalprobe
 
 import (
+	"encoding/json"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -10,27 +13,36 @@ import (
 
 type SnsMessageAttributes map[string]*sns.MessageAttributeValue
 
-type publishSnsMessage struct {
+type PublishSns struct {
 	target  Target
 	message []byte
 	attrs   SnsMessageAttributes
 	baseScene
 }
 
-func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *publishSnsMessage {
-	scene := publishSnsMessage{
+func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *PublishSns {
+	scene := PublishSns{
 		target:  target,
 		message: message,
 	}
 	return &scene
 }
 
-func (x *publishSnsMessage) AddMessageAttributes(attrs SnsMessageAttributes) *publishSnsMessage {
+func (x *Generalprobe) PublishSnsData(target Target, data interface{}) *PublishSns {
+	msg, err := json.Marshal(data)
+	if err != nil {
+		log.Fatalf("Fail to marshal data for SNS publish: %v", data)
+	}
+
+	return x.PublishSnsMessage(target, msg)
+}
+
+func (x *PublishSns) AddMessageAttributes(attrs SnsMessageAttributes) *PublishSns {
 	x.attrs = attrs
 	return x
 }
 
-func (x *publishSnsMessage) play() error {
+func (x *PublishSns) play() error {
 	ssn := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(x.region()),
 	}))
