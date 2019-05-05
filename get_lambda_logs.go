@@ -36,29 +36,28 @@ func (x CloudWatchLog) Contains(key string) bool {
 	return strings.Index(string(x), key) >= 0
 }
 
-func (x *Generalprobe) GetLambdaLogs(target Target, filter string, callback GetLambdaLogsCallback) *getLambdaLogs {
+func (x *Generalprobe) GetLambdaLogs(target Target, callback GetLambdaLogsCallback) *getLambdaLogs {
 	scene := getLambdaLogs{
 		target:     target,
 		callback:   callback,
 		queryLimit: 20,
 		interval:   3,
-		filter:     filter,
 	}
 
 	return &scene
 }
 
-func (x *getLambdaLogs) SetFilter(filter string) *getLambdaLogs {
+func (x *getLambdaLogs) Filter(filter string) *getLambdaLogs {
 	x.filter = filter
 	return x
 }
 
-func (x *getLambdaLogs) SetQueryLimit(queryLimit uint) *getLambdaLogs {
+func (x *getLambdaLogs) QueryLimit(queryLimit uint) *getLambdaLogs {
 	x.queryLimit = queryLimit
 	return x
 }
 
-func (x *getLambdaLogs) SetInterval(interval uint) *getLambdaLogs {
+func (x *getLambdaLogs) Interval(interval uint) *getLambdaLogs {
 	x.interval = interval
 	return x
 }
