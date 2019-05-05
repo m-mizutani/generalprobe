@@ -91,7 +91,7 @@ func (x *getLambdaLogs) play() error {
 			"resp":  resp,
 			"input": input,
 			"start": *input.StartTime,
-		}).Debug("Filtered log events")
+		}).Trace("Filtered log events")
 
 		if nil != err {
 			if aerr, ok := err.(awserr.Error); ok {
@@ -105,7 +105,9 @@ func (x *getLambdaLogs) play() error {
 		}
 
 		for _, event := range resp.Events {
-			if event.Message != nil {
+			if event.Message != nil &&
+				(x.filter == "" || strings.Index(*event.Message, x.filter) >= 0) {
+
 				if x.callback(CloudWatchLog(*event.Message)) {
 					return nil
 				}
