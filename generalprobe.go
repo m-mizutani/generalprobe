@@ -2,6 +2,7 @@ package generalprobe
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -18,12 +19,30 @@ import (
 var logger = logrus.New()
 
 func init() {
-	logger.SetLevel(logrus.WarnLevel)
+	level := os.Getenv("GENERALPROBE_LOG_LEVEL")
+
+	switch {
+	case strings.EqualFold(level, "debug"):
+		logger.SetLevel(logrus.DebugLevel)
+	case strings.EqualFold(level, "info"):
+		logger.SetLevel(logrus.InfoLevel)
+	case strings.EqualFold(level, "warn"):
+		logger.SetLevel(logrus.WarnLevel)
+	case strings.EqualFold(level, "error"):
+		logger.SetLevel(logrus.ErrorLevel)
+	default:
+		logger.SetLevel(logrus.WarnLevel)
+	}
 }
 
+// SetLoggerDebugLevel changes logging level to Debug
 func SetLoggerDebugLevel() { logger.SetLevel(logrus.DebugLevel) }
-func SetLoggerInfoLevel()  { logger.SetLevel(logrus.InfoLevel) }
-func SetLoggerWarnLevel()  { logger.SetLevel(logrus.WarnLevel) }
+
+// SetLoggerInfoLevel changes logging level to Info
+func SetLoggerInfoLevel() { logger.SetLevel(logrus.InfoLevel) }
+
+// SetLoggerWarnLevel changes logging level to Warn
+func SetLoggerWarnLevel() { logger.SetLevel(logrus.WarnLevel) }
 
 // Generalprobe is a main structure of the framework
 type Generalprobe struct {
