@@ -86,6 +86,7 @@ func (x *getLambdaLogs) play() error {
 			input.NextToken = aws.String(nextToken)
 		}
 
+		logger.WithField("input", input).Debug("Call FilterLogEvents")
 		resp, err := client.FilterLogEvents(&input)
 		logger.WithFields(logrus.Fields{
 			"resp":  resp,
