@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type invokeLambda struct {
+type InvokeLambdaScene struct {
 	target   Target
 	input    []byte
 	event    interface{}
@@ -24,8 +24,8 @@ type invokeLambda struct {
 type InvokeLambdaCallback func(response []byte)
 
 // InvokeLambda is a constructor of Scene
-func (x *Generalprobe) InvokeLambda(target Target, callback InvokeLambdaCallback) *invokeLambda {
-	scene := invokeLambda{
+func (x *Generalprobe) InvokeLambda(target Target, callback InvokeLambdaCallback) *InvokeLambdaScene {
+	scene := InvokeLambdaScene{
 		target:   target,
 		callback: callback,
 	}
@@ -47,7 +47,7 @@ func toMessage(msg interface{}) string {
 	}
 }
 
-func (x *invokeLambda) SnsEvent(input interface{}) *invokeLambda {
+func (x *InvokeLambdaScene) SnsEvent(input interface{}) *InvokeLambdaScene {
 	msg := toMessage(input)
 	event := events.SNSEvent{
 		Records: []events.SNSEventRecord{
@@ -61,12 +61,12 @@ func (x *invokeLambda) SnsEvent(input interface{}) *invokeLambda {
 	return x.Event(event)
 }
 
-func (x *invokeLambda) Event(event interface{}) *invokeLambda {
+func (x *InvokeLambdaScene) Event(event interface{}) *InvokeLambdaScene {
 	x.event = event
 	return x
 }
 
-func (x *invokeLambda) play() error {
+func (x *InvokeLambdaScene) play() error {
 	eventData, err := json.Marshal(x.event)
 	if err != nil {
 		return errors.Wrap(err, "unmarshal event")
