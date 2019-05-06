@@ -124,9 +124,5 @@ func (x *GetLambdaLogsScene) play() error {
 		}
 	}
 
-	if !x.callback(CloudWatchLog("")) {
-		return errors.New("No expected logs from CloudWatch Logs")
-	}
-
-	return nil
+	return errors.New("No expected logs from CloudWatch Logs")
 }

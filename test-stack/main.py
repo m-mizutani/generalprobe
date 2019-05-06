@@ -34,11 +34,4 @@ def handler(records, context):
 
         logger.info('DynamoDB: {}'.format(dynamo_res))
 
-        s3_res = s3_client.put_object(
-            Bucket=os.environ['BUCKET_NAME'],
-            Key='{}/data.json'.format(msg['id']),
-            Body=json.dumps(msg).encode('utf8')
-        )
-        logger.info('S3: {}'.format(s3_res))
-
     return {'message': 'ok'}
