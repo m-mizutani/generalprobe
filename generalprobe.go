@@ -101,10 +101,11 @@ func toMilliSec(t time.Time) *int64 {
 	return &u
 }
 
-func (x *Generalprobe) Play(scenario []Scene) error {
-	for idx, scene := range scenario {
+// Play executes defined scenes sequentially.
+func (x *Generalprobe) Play(playbook []Scene) error {
+	for idx, scene := range playbook {
 		scene.setGeneralprobe(x)
-		logger.Infof("Step (%d/%d): %s (%s)\n", idx+1, len(scenario), scene.string(), reflect.TypeOf(scene))
+		logger.Infof("Step (%d/%d): %s (%s)\n", idx+1, len(playbook), scene.string(), reflect.TypeOf(scene))
 
 		if err := scene.play(); err != nil {
 			logger.WithFields(logrus.Fields{
