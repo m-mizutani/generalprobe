@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// InvokeLambdaScene is a scene only to invoke AWS Lambda.
 type InvokeLambdaScene struct {
 	target   Target
 	input    []byte
@@ -47,6 +48,7 @@ func toMessage(msg interface{}) string {
 	}
 }
 
+// SnsEvent sets SNS event as argument of invoke Lambda.
 func (x *InvokeLambdaScene) SnsEvent(input interface{}) *InvokeLambdaScene {
 	msg := toMessage(input)
 	event := events.SNSEvent{
@@ -61,6 +63,8 @@ func (x *InvokeLambdaScene) SnsEvent(input interface{}) *InvokeLambdaScene {
 	return x.Event(event)
 }
 
+// Event sets general event structure as argument of invoke Lambda.
+// event will be marshaled to JSON string and pass it to Lambda.
 func (x *InvokeLambdaScene) Event(event interface{}) *InvokeLambdaScene {
 	x.event = event
 	return x

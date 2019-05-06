@@ -153,6 +153,25 @@ func (x *Generalprobe) Run() error {
 	return nil
 }
 
+func (x *Generalprobe) Play(scenario []Scene) error {
+	for idx, scene := range scenario {
+		scene.setGeneralprobe(x)
+		logger.Infof("Step (%d/%d): %s (%s)\n", idx+1, len(x.scenes), scene.String(), reflect.TypeOf(scene))
+
+		if err := scene.play(); err != nil {
+			logger.WithFields(logrus.Fields{
+				"sceneType": reflect.TypeOf(scene),
+				"sceneNo":   idx,
+				"scene":     scene,
+				"error":     err,
+			}).Error("Failed Generalprobe")
+			return err
+		}
+	}
+
+	return nil
+}
+
 // LogicalID is one of target type. LogicalID requires name of resource
 // in CloudFormation template. Generalprobe automatically converts
 // logical resource name to physical (actual) resource name.
