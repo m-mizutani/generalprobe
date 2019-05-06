@@ -22,7 +22,7 @@ type GetDynamoRecordScene struct {
 type GetDynamoRecordCallback func(table dynamo.Table) bool
 
 // GetDynamoRecord is a constructor of Scene
-func (x *Generalprobe) GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *GetDynamoRecordScene {
+func GetDynamoRecord(target Target, callback GetDynamoRecordCallback) *GetDynamoRecordScene {
 	scene := GetDynamoRecordScene{
 		target:   target,
 		callback: callback,
@@ -35,15 +35,15 @@ func (x *Generalprobe) GetDynamoRecord(target Target, callback GetDynamoRecordCa
 }
 
 // Strings return text explanation of the scene
-func (x *GetDynamoRecordScene) String() string {
-	return fmt.Sprintf("Read DynamoDB of %s", x.target.arn())
+func (x *GetDynamoRecordScene) string() string {
+	return fmt.Sprintf("Read DynamoDB of %s", x.target.arn(x.gp))
 }
 
 func (x *GetDynamoRecordScene) play() error {
 	db := dynamo.New(session.New(), &aws.Config{
 		Region: aws.String(x.region()),
 	})
-	table := db.Table(x.target.name())
+	table := db.Table(x.target.name(x.gp))
 
 	for n := 0; n < x.limit; n++ {
 		if x.callback(table) {

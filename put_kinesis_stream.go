@@ -19,7 +19,7 @@ type PutKinesisStreamRecordScene struct {
 }
 
 // PutKinesisStreamRecord is a constructor of Scene
-func (x *Generalprobe) PutKinesisStreamRecord(target Target, message []byte) *PutKinesisStreamRecordScene {
+func PutKinesisStreamRecord(target Target, message []byte) *PutKinesisStreamRecordScene {
 	scene := PutKinesisStreamRecordScene{
 		target:  target,
 		message: message,
@@ -28,14 +28,14 @@ func (x *Generalprobe) PutKinesisStreamRecord(target Target, message []byte) *Pu
 }
 
 // Strings return text explanation of the scene
-func (x *PutKinesisStreamRecordScene) String() string {
-	return fmt.Sprintf("Put a new kinesis record to %s", x.target.arn())
+func (x *PutKinesisStreamRecordScene) string() string {
+	return fmt.Sprintf("Put a new kinesis record to %s", x.target.arn(x.gp))
 }
 
 func (x *PutKinesisStreamRecordScene) play() error {
 	const maxRetry = 20
 
-	streamName := x.target.name()
+	streamName := x.target.name(x.gp)
 
 	ssn := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(x.region()),

@@ -7,10 +7,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Scene is a part of playbook of test.
 type Scene interface {
 	play() error
 	setGeneralprobe(gp *Generalprobe)
-	String() string
+	string() string
 }
 
 type baseScene struct {
@@ -41,7 +42,7 @@ func (x *pollingScene) play() error {
 }
 
 // String returns explain text
-func (x *pollingScene) String() string {
+func (x *pollingScene) string() string {
 	return "pollingScene"
 }
 

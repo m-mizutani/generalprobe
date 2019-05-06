@@ -3,36 +3,16 @@ package generalprobe_test
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/guregu/dynamo"
 	gp "github.com/m-mizutani/generalprobe"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-var logger = logrus.New()
-
-func init() {
-	logLevel := logrus.WarnLevel
-	switch os.Getenv("GP_LOG_LEVEL") {
-	case "TRACE":
-		logLevel = logrus.TraceLevel
-	case "DEBUG":
-		logLevel = logrus.DebugLevel
-	case "INFO":
-		logLevel = logrus.InfoLevel
-	case "WARN":
-		logLevel = logrus.WarnLevel
-	case "ERROR":
-		logLevel = logrus.ErrorLevel
-
-	}
-	logger.SetLevel(logLevel)
-}
 
 type testParameters struct {
 	StackName string `json:"StackName"`
@@ -43,19 +23,18 @@ func loadTestParameters() testParameters {
 	paramFile := "test-stack/params.json"
 	fd, err := os.Open(paramFile)
 	if err != nil {
-		logger.Printf("Can not open")
-		logger.Error(err)
+		log.Fatalf("Can not open %s: %s", paramFile, err)
 	}
 
 	data, err := ioutil.ReadAll(fd)
 	if err != nil {
-		logger.Error(err)
+		log.Fatalf("Fail to read data %s: %s", paramFile, err)
 	}
 
 	var p testParameters
 	err = json.Unmarshal(data, &p)
 	if err != nil {
-		logger.Error(err)
+		log.Fatalf("Fail to unmarshal data %s: %s", paramFile, err)
 	}
 
 	return p
@@ -63,19 +42,20 @@ func loadTestParameters() testParameters {
 
 func TestBasicUsage(t *testing.T) {
 	params := loadTestParameters()
-	g := gp.New(params.Region, params.StackName)
 
 	n := 0
-	g.AddScenes([]gp.Scene{
-		g.AdLib(func() {
+	scenario := []gp.Scene{
+		gp.AdLib(func() {
 			n++
 		}),
-		g.Pause(1),
-		g.AdLib(func() {
+		gp.Pause(1),
+		gp.AdLib(func() {
 			n++
 		}),
-	})
-	g.Run()
+	}
+
+	err := gp.New(params.Region, params.StackName).Play(scenario)
+	require.NoError(t, err)
 	assert.Equal(t, 2, n)
 }
 
@@ -84,16 +64,15 @@ func TestSnsToDynamo(t *testing.T) {
 	id := uuid.New().String()
 
 	done := false
-	g := gp.New(params.Region, params.StackName)
-	g.AddScenes([]gp.Scene{
+	scenario := []gp.Scene{
 		// Send request
-		g.PublishSnsMessage(g.LogicalID("Trigger"), []byte(`{"id":"`+id+`"}`)),
+		gp.PublishSnsMessage(gp.LogicalID("Trigger"), []byte(`{"id":"`+id+`"}`)),
 
 		// Recv result
-		g.GetDynamoRecord(g.LogicalID("ResultStore"), func(table dynamo.Table) bool {
+		gp.GetDynamoRecord(gp.LogicalID("ResultStore"), func(table dynamo.Table) bool {
 			var resp []map[string]interface{}
 			err := table.Get("result_id", id).All(&resp)
-			logger.WithField("dynamo resp", resp).Debug("get dynamo response")
+
 			require.NoError(t, err)
 			if len(resp) > 0 {
 				assert.Equal(t, 1, len(resp))
@@ -105,13 +84,14 @@ func TestSnsToDynamo(t *testing.T) {
 			return false
 		}),
 
-		g.GetLambdaLogs(g.LogicalID("TestHandler"), func(logs gp.CloudWatchLog) bool {
+		gp.GetLambdaLogs(gp.LogicalID("TestHandler"), func(logs gp.CloudWatchLog) bool {
 			assert.True(t, logs.Contains(id))
 			return true
 		}).Filter(id),
-	})
+	}
 
-	g.Run()
+	err := gp.New(params.Region, params.StackName).Play(scenario)
+	require.NoError(t, err)
 	require.Equal(t, true, done)
 }
 
@@ -119,16 +99,15 @@ func TestKinesisStream(t *testing.T) {
 	params := loadTestParameters()
 
 	id := uuid.New().String()
-	g := gp.New(params.Region, params.StackName)
-	g.AddScenes([]gp.Scene{
+	scenario := []gp.Scene{
 		// Send message
-		g.PutKinesisStreamRecord(g.LogicalID("ResultStream"), []byte(id)),
-		g.GetKinesisStreamRecord(g.LogicalID("ResultStream"), func(data []byte) bool {
+		gp.PutKinesisStreamRecord(gp.LogicalID("ResultStream"), []byte(id)),
+		gp.GetKinesisStreamRecord(gp.LogicalID("ResultStream"), func(data []byte) bool {
 			assert.Equal(t, string(data), id)
 			return true
 		}),
-	})
+	}
 
-	g.Run()
-
+	err := gp.New(params.Region, params.StackName).Play(scenario)
+	require.NoError(t, err)
 }

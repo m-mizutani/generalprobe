@@ -17,8 +17,8 @@ import (
 // GetLambdaLogsCallback is a callback type of GetLambdaLogs
 type GetLambdaLogsCallback func(logs CloudWatchLog) bool
 
-// GetLambdaLogs is a scene of waiting AWS Lambda logs
-type GetLambdaLogs struct {
+// GetLambdaLogsScene is a scene of waiting AWS Lambda logs
+type GetLambdaLogsScene struct {
 	target   Target
 	filter   string
 	callback GetLambdaLogsCallback
@@ -42,8 +42,8 @@ func (x CloudWatchLog) Contains(key string) bool {
 }
 
 // GetLambdaLogs creates a new scene to wait AWS Lambda output from CloudWatchLogs
-func (x *Generalprobe) GetLambdaLogs(target Target, callback GetLambdaLogsCallback) *GetLambdaLogs {
-	scene := GetLambdaLogs{
+func GetLambdaLogs(target Target, callback GetLambdaLogsCallback) *GetLambdaLogsScene {
+	scene := GetLambdaLogsScene{
 		target:   target,
 		callback: callback,
 		pollingScene: pollingScene{
@@ -57,18 +57,18 @@ func (x *Generalprobe) GetLambdaLogs(target Target, callback GetLambdaLogsCallba
 
 // Filter sets filtering keyword to search CloudWatch Logs.
 // Default is empty. The filter keyword will be quote automatically when querying.
-func (x *GetLambdaLogs) Filter(filter string) *GetLambdaLogs {
+func (x *GetLambdaLogsScene) Filter(filter string) *GetLambdaLogsScene {
 	x.filter = filter
 	return x
 }
 
 // Strings return text explanation of the scene
-func (x *GetLambdaLogs) String() string {
-	return fmt.Sprintf("Reading Lambda Logs of %s", x.target.arn())
+func (x *GetLambdaLogsScene) string() string {
+	return fmt.Sprintf("Reading Lambda Logs of %s", x.target.arn(x.gp))
 }
 
-func (x *GetLambdaLogs) play() error {
-	lambdaName := x.target.name()
+func (x *GetLambdaLogsScene) play() error {
+	lambdaName := x.target.name(x.gp)
 	if lambdaName == "" {
 		logger.Fatal(fmt.Printf("No such lambda function: %s", x.target))
 	}

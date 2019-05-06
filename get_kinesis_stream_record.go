@@ -22,7 +22,7 @@ type GetKinesisStreamRecordScene struct {
 type GetKinesisStreamRecordCallback func(data []byte) bool
 
 // GetKinesisStreamRecord is a constructor of Scene
-func (x *Generalprobe) GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *GetKinesisStreamRecordScene {
+func GetKinesisStreamRecord(target Target, callback GetKinesisStreamRecordCallback) *GetKinesisStreamRecordScene {
 	scene := GetKinesisStreamRecordScene{
 		target:   target,
 		callback: callback,
@@ -34,12 +34,12 @@ func (x *Generalprobe) GetKinesisStreamRecord(target Target, callback GetKinesis
 	return &scene
 }
 
-func (x *GetKinesisStreamRecordScene) String() string {
-	return fmt.Sprintf("Get Kinesis Record from %s", x.target.arn())
+func (x *GetKinesisStreamRecordScene) string() string {
+	return fmt.Sprintf("Get Kinesis Record from %s", x.target.arn(x.gp))
 }
 
 func (x *GetKinesisStreamRecordScene) play() error {
-	streamName := x.target.name()
+	streamName := x.target.name(x.gp)
 
 	ssn := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(x.region()),

@@ -2,6 +2,7 @@ package generalprobe
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,12 +26,17 @@ type InvokeLambdaScene struct {
 type InvokeLambdaCallback func(response []byte)
 
 // InvokeLambda is a constructor of Scene
-func (x *Generalprobe) InvokeLambda(target Target, callback InvokeLambdaCallback) *InvokeLambdaScene {
+func InvokeLambda(target Target, callback InvokeLambdaCallback) *InvokeLambdaScene {
 	scene := InvokeLambdaScene{
 		target:   target,
 		callback: callback,
 	}
 	return &scene
+}
+
+// Strings return text explanation of the scene
+func (x *InvokeLambdaScene) string() string {
+	return fmt.Sprintf("Invoke Lambda %s", x.target.arn(x.gp))
 }
 
 func toMessage(msg interface{}) string {
@@ -81,7 +87,7 @@ func (x *InvokeLambdaScene) play() error {
 	}))
 	lambdaService := lambda.New(ssn)
 
-	lambdaArn := x.target.arn()
+	lambdaArn := x.target.arn(x.gp)
 	resp, err := lambdaService.Invoke(&lambda.InvokeInput{
 		FunctionName: aws.String(lambdaArn),
 		Payload:      eventData,

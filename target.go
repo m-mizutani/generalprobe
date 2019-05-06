@@ -7,17 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Target is resource identity interface. LogicalID and Arn can be used
+// to specify a resource on CloudFormation or not.
 type Target interface {
-	setGeneralprobe(gp *Generalprobe)
-	arn() string
-	name() string
+	arn(gp *Generalprobe) string
+	name(gp *Generalprobe) string
 }
 
-type baseTarget struct {
-	gp *Generalprobe
-}
-
-func (x *baseTarget) setGeneralprobe(gp *Generalprobe) { x.gp = gp }
+type baseTarget struct{}
 
 // LogicalIDTarget is not expected to be controlled outside of generalprobe package.
 // But it's exporeted just according to Go manner.
@@ -31,7 +28,7 @@ func newLogicalID(name string) *LogicalIDTarget {
 	return &LogicalIDTarget{LogicalID: name}
 }
 
-func (x *LogicalIDTarget) toArn(physicalID string) string {
+func (x *LogicalIDTarget) toArn(physicalID string, gp *Generalprobe) string {
 	if len(strings.Split(physicalID, ":")) == 6 {
 		return physicalID
 	}
@@ -47,7 +44,7 @@ func (x *LogicalIDTarget) toArn(physicalID string) string {
 		"AWS::Kinesis::Stream":  serviceHint{"kinesis", "stream/"},
 	}
 
-	resourceType := x.gp.LookupType(x.LogicalID)
+	resourceType := gp.LookupType(x.LogicalID)
 	service, ok := serviceMap[resourceType]
 	if !ok {
 		log.WithFields(log.Fields{
@@ -56,17 +53,17 @@ func (x *LogicalIDTarget) toArn(physicalID string) string {
 		}).Fatal("The resource type is not supported")
 	}
 
-	return fmt.Sprintf("arn:aws:%s:%s:%s:%s%s", service.name, x.gp.awsRegion,
-		x.gp.awsAccount, service.prefix, physicalID)
+	return fmt.Sprintf("arn:aws:%s:%s:%s:%s%s", service.name, gp.awsRegion,
+		gp.awsAccount, service.prefix, physicalID)
 }
 
-func (x *LogicalIDTarget) arn() string {
-	pID := x.gp.LookupID(x.LogicalID)
-	return x.toArn(pID)
+func (x *LogicalIDTarget) arn(gp *Generalprobe) string {
+	pID := gp.LookupID(x.LogicalID)
+	return x.toArn(pID, gp)
 }
 
-func (x *LogicalIDTarget) name() string {
-	pID := x.gp.LookupID(x.LogicalID)
+func (x *LogicalIDTarget) name(gp *Generalprobe) string {
+	pID := gp.LookupID(x.LogicalID)
 	return pID
 }
 
@@ -86,11 +83,11 @@ func newArn(arn string) *ArnTarget {
 	return &ArnTarget{arnData: arn}
 }
 
-func (x *ArnTarget) arn() string {
+func (x *ArnTarget) arn(gp *Generalprobe) string {
 	return x.arnData
 }
 
-func (x *ArnTarget) name() string {
+func (x *ArnTarget) name(gp *Generalprobe) string {
 	// arn:partition:service:region:account-id:resource
 	sec := strings.Split(x.arnData, ":")
 	last := sec[len(sec)-1]
@@ -100,4 +97,19 @@ func (x *ArnTarget) name() string {
 	}
 
 	return last
+}
+
+// LogicalID is one of target type. LogicalID requires name of resource
+// in CloudFormation template. Generalprobe automatically converts
+// logical resource name to physical (actual) resource name.
+func LogicalID(logicalID string) *LogicalIDTarget {
+	r := newLogicalID(logicalID)
+	return r
+}
+
+// Arn is one of target type. Arn() just requires ARN
+// (Amazon Resource Namespace) of target resource.
+func Arn(logicalID string) *ArnTarget {
+	r := newArn(logicalID)
+	return r
 }

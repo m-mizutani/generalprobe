@@ -10,7 +10,7 @@ type AdLibScene struct {
 type AdLibCallback func()
 
 // AdLib creates a scene of AdLib
-func (x *Generalprobe) AdLib(callback AdLibCallback) *AdLibScene {
+func AdLib(callback AdLibCallback) *AdLibScene {
 	scene := AdLibScene{
 		callback: callback,
 	}
@@ -18,7 +18,7 @@ func (x *Generalprobe) AdLib(callback AdLibCallback) *AdLibScene {
 }
 
 // String returns explanation text
-func (x *AdLibScene) String() string {
+func (x *AdLibScene) string() string {
 	return "AdLib"
 }
 

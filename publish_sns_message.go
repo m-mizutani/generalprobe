@@ -24,7 +24,7 @@ type PublishSnsScene struct {
 }
 
 // PublishSnsMessage creates a scene of SNS Publish with byte sequence message.
-func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *PublishSnsScene {
+func PublishSnsMessage(target Target, message []byte) *PublishSnsScene {
 	scene := PublishSnsScene{
 		target:  target,
 		message: message,
@@ -33,13 +33,13 @@ func (x *Generalprobe) PublishSnsMessage(target Target, message []byte) *Publish
 }
 
 // PublishSnsData creates a scene of SNS Publish with structure data.
-func (x *Generalprobe) PublishSnsData(target Target, data interface{}) *PublishSnsScene {
+func PublishSnsData(target Target, data interface{}) *PublishSnsScene {
 	msg, err := json.Marshal(data)
 	if err != nil {
 		log.Fatalf("Fail to marshal data for SNS publish: %v", data)
 	}
 
-	return x.PublishSnsMessage(target, msg)
+	return PublishSnsMessage(target, msg)
 }
 
 // MessageAttributes sets attribute of SNS MessageAttributes map
@@ -49,8 +49,8 @@ func (x *PublishSnsScene) MessageAttributes(attrs SnsMessageAttributes) *Publish
 }
 
 // Strings return text explanation of the scene
-func (x *PublishSnsScene) String() string {
-	return fmt.Sprintf("SNS message to %s", x.target.arn())
+func (x *PublishSnsScene) string() string {
+	return fmt.Sprintf("SNS message to %s", x.target.arn(x.gp))
 }
 
 func (x *PublishSnsScene) play() error {
@@ -59,7 +59,7 @@ func (x *PublishSnsScene) play() error {
 	}))
 	snsService := sns.New(ssn)
 
-	topicArn := x.target.arn()
+	topicArn := x.target.arn(x.gp)
 	resp, err := snsService.Publish(&sns.PublishInput{
 		Message:           aws.String(string(x.message)),
 		TopicArn:          aws.String(topicArn),

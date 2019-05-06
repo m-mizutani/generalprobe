@@ -12,7 +12,7 @@ type PauseScene struct {
 }
 
 // Pause creats a scene of sleeping.
-func (x *Generalprobe) Pause(interval int) *PauseScene {
+func Pause(interval int) *PauseScene {
 	scene := PauseScene{
 		interval: interval,
 	}
@@ -20,7 +20,7 @@ func (x *Generalprobe) Pause(interval int) *PauseScene {
 }
 
 // String returns text explanation of the scene
-func (x *PauseScene) String() string {
+func (x *PauseScene) string() string {
 	return fmt.Sprintf("Pausing %d seconds", x.interval)
 }
 
