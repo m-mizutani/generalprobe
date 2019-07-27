@@ -78,6 +78,8 @@ func (x *GetLambdaLogsScene) play() error {
 	now := time.Now().UTC()
 
 	for n := 0; n <= x.limit; n++ {
+		time.Sleep(time.Second * time.Duration(x.interval))
+
 		input := cloudwatchlogs.FilterLogEventsInput{
 			LogGroupName: aws.String(fmt.Sprintf("/aws/lambda/%s", lambdaName)),
 			StartTime:    toMilliSec(x.startTime().Add(time.Minute * -1)),
@@ -116,8 +118,6 @@ func (x *GetLambdaLogsScene) play() error {
 				}
 			}
 		}
-
-		time.Sleep(time.Second * time.Duration(x.interval))
 
 		if resp.NextToken != nil {
 			nextToken = *resp.NextToken
