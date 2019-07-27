@@ -26,6 +26,9 @@ func setupLogger() {
 	}
 }
 
+// SetLoggerTraceLevel changes logging level to Trace
+func SetLoggerTraceLevel() { logger.SetLevel(logrus.TraceLevel) }
+
 // SetLoggerDebugLevel changes logging level to Debug
 func SetLoggerDebugLevel() { logger.SetLevel(logrus.DebugLevel) }
 
