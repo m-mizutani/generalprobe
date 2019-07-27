@@ -119,7 +119,7 @@ func (x *GetLambdaLogsScene) play() error {
 
 		time.Sleep(time.Second * time.Duration(x.interval))
 
-		if resp.NextToken == nil {
+		if resp.NextToken != nil {
 			nextToken = *resp.NextToken
 		}
 	}
